@@ -1,6 +1,35 @@
 # 비주얼 스타일 기준
 
-작성일: 2026-10-20
+작성일: 2026-10-20 (같은 날 방향 수정)
+
+## 확정 방향
+
+- 게시물 한 장 = 추천 컬러 조합 하나. 비교 형식(GOOD/BETTER)은 쓰지 않는다.
+- 전신 마네킹 한 명이 조합을 입고 서 있다. 마네킹은 실제 사람 비율(약 7.5등신).
+- 마네킹: 무광 흰색, 얼굴 없음(코와 눈썹뼈만 옅게), 조각처럼 정리된 진회색 머리카락.
+- 배경: 따뜻한 베이지 단색 스튜디오, 부드러운 조명.
+- 남성과 여성 게시물을 번갈아 올린다. 분위기는 같게, 팔레트만 다르게.
+- 글자(번호, 조합 이름, 색 칩, HEX)는 코드로 합성한다. 칩 색은 생성된 이미지의 옷에서 직접 뽑는다.
+- 합성 도구: `scripts/compose_post.py` (1080x1350 세로형)
+
+## 지시문 틀 (gpt-image-2, 1024x1536, medium)
+
+```text
+Full-body fashion lookbook photo of a realistic life-size {male|female} display mannequin with natural adult human proportions
+(about 7.5 heads tall, realistic shoulder width, long legs, natural hands). Faceless matte white head: smooth surface with only a subtle
+sculpted nose and brow ridge, no eyes, no mouth, no makeup. Sculpted dark grey hair: {hair}. Matte white mannequin neck and hands.
+Pose: standing relaxed, front view, slight contrapposto, arms natural at the sides. Outfit: {outfit}.
+Plain warm beige seamless studio backdrop and floor (#E8DFD3), soft diffused studio light, soft natural floor shadow, realistic fabric texture,
+muted and calm colors, the entire figure from top of hair to shoes fully in frame, figure centered and occupying about 75 percent of the image height,
+clear empty background margin above the head and below the feet. No text, no logos, no human skin, no human face.
+```
+
+- 남성 머리: short textured crop swept slightly up
+- 여성 머리: shoulder-length straight hair tucked behind the ears
+
+---
+
+## (이전 검토 기록) GOOD vs BETTER 안
 
 ## 레퍼런스
 
