@@ -2,30 +2,34 @@
 
 작성일: 2026-10-20 (같은 날 방향 수정)
 
-## 확정 방향
+## 확정 방향 (2026-10-20 2차 수정)
 
-- 게시물 한 장 = 추천 컬러 조합 하나. 비교 형식(GOOD/BETTER)은 쓰지 않는다.
-- 전신 마네킹 한 명이 조합을 입고 서 있다. 마네킹은 실제 사람 비율(약 7.5등신).
-- 마네킹: 무광 흰색, 얼굴 없음(코와 눈썹뼈만 옅게), 조각처럼 정리된 진회색 머리카락.
-- 배경: 따뜻한 베이지 단색 스튜디오, 부드러운 조명.
-- 남성과 여성 게시물을 번갈아 올린다. 분위기는 같게, 팔레트만 다르게.
-- 글자(번호, 조합 이름, 색 칩, HEX)는 코드로 합성한다. 칩 색은 생성된 이미지의 옷에서 직접 뽑는다.
-- 합성 도구: `scripts/compose_post.py` (1080x1350 세로형)
+- 게시물 한 장 = 추천 컬러 조합 하나. 한 장면에 남자 마네킹 1명(왼쪽) + 여자 마네킹 1명(오른쪽)이 같은 3색 조합을 나눠 입는다.
+- 마네킹 비율: 8.5등신 패션 비율. 무광 흰색, 얼굴 없음(코와 눈썹뼈만 옅게), 조각처럼 정리된 진회색 머리카락.
+- 배경: 따뜻한 베이지 단색 스튜디오. 사진을 칸에 넣지 않고 배경이 화면 끝까지 이어지게 합성한다.
+- 색 강조: 하단에 화면 폭 전체를 3등분한 색 띠(색 이름 + HEX). 상단에 번호와 "A × B × C" 제목.
+- 칩 색은 생성 이미지의 옷에서 직접 뽑는다(그림자 없는 밝은 면 기준).
+- 생성: gpt-image-2, 1088x1360(4:5), high. 최종 1080x1350 JPEG.
+- 합성 도구: scripts/compose_post.py (layout: "pair")
 
-## 지시문 틀 (gpt-image-2, 1024x1536, medium)
+## 지시문 틀
 
 ```text
-Full-body fashion lookbook photo of a realistic life-size {male|female} display mannequin with natural adult human proportions
-(about 7.5 heads tall, realistic shoulder width, long legs, natural hands). Faceless matte white head: smooth surface with only a subtle
-sculpted nose and brow ridge, no eyes, no mouth, no makeup. Sculpted dark grey hair: {hair}. Matte white mannequin neck and hands.
-Pose: standing relaxed, front view, slight contrapposto, arms natural at the sides. Outfit: {outfit}.
-Plain warm beige seamless studio backdrop and floor (#E8DFD3), soft diffused studio light, soft natural floor shadow, realistic fabric texture,
-muted and calm colors, the entire figure from top of hair to shoes fully in frame, figure centered and occupying about 75 percent of the image height,
-clear empty background margin above the head and below the feet. No text, no logos, no human skin, no human face.
+Fashion lookbook photo of two realistic life-size display mannequins standing side by side in one scene, a male mannequin on the left and a female mannequin on the right,
+with a small gap between them, both facing the camera in a relaxed natural stance. Elegant elongated fashion proportions: both mannequins are 8.5 heads tall,
+small heads, long necks, long legs, realistic shoulders and natural hands; the male slightly taller. Faceless matte white heads with only a subtle sculpted nose and brow ridge,
+no eyes, no mouth. Sculpted dark grey hair: male short textured crop swept slightly up, female shoulder-length straight hair tucked behind the ears. Matte white neck and hands.
+They wear a coordinated outfit pair built from exactly this color combination: {palette}. Male: {male}. Female: {female}.
+Solid fabrics, no patterns, no logos, the three colors clearly readable as large color blocks.
+Plain warm beige seamless studio backdrop and floor, soft diffused studio light, soft floor shadow, realistic fabric texture, calm editorial mood.
+Both full bodies from top of hair to shoes fully in frame, figures centered and occupying about 70 percent of the image height,
+leave clean empty beige background in the top 12 percent and the bottom 16 percent of the image for text. No text, no logos, no human skin, no human face.
 ```
 
-- 남성 머리: short textured crop swept slightly up
-- 여성 머리: shoulder-length straight hair tucked behind the ears
+## 비용 (2026-10-20 실측)
+
+- 고화질 1088x1360 한 장: 출력 6,431 토큰 x $30/100만 = 약 $0.19
+- 하루 1장: 한 달 약 $6, 다시 생성하는 경우를 합쳐 약 $8~10
 
 ---
 
