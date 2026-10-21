@@ -128,9 +128,78 @@ def extend_background(img, ox, oy):
     return Image.fromarray(fill.astype(np.uint8))
 
 
-def compose_pair(spec_path):
+FONT_DIR = ROOT / "assets" / "fonts"
+TYPE_STYLES = {
+    "editorial": {
+        "title": ("BodoniModa[opsz,wght].ttf", 64, [500, 28], 0, False),
+        "number": ("Jost[wght].ttf", 22, [600], 4, True),
+        "label": ("Jost[wght].ttf", 34, [500], 0, False),
+        "hex": ("Jost[wght].ttf", 23, [400], 2, True),
+        "handle": ("Jost[wght].ttf", 22, [500], 1, False),
+    },
+    "classic": {
+        "title": ("CormorantGaramond[wght].ttf", 76, [600], 0, False),
+        "number": ("Montserrat[wght].ttf", 20, [600], 5, True),
+        "label": ("CormorantGaramond[wght].ttf", 42, [700], 0, False),
+        "hex": ("Montserrat[wght].ttf", 21, [500], 2, True),
+        "handle": ("Montserrat[wght].ttf", 20, [500], 1, False),
+    },
+    "modern": {
+        "title": ("Jost[wght].ttf", 50, [500], 6, True),
+        "number": ("Jost[wght].ttf", 22, [400], 6, True),
+        "label": ("Jost[wght].ttf", 30, [600], 3, True),
+        "hex": ("Jost[wght].ttf", 22, [300], 3, True),
+        "handle": ("Jost[wght].ttf", 21, [400], 2, False),
+    },
+}
+
+
+def vfont(file, size, axes):
+    f = ImageFont.truetype(str(FONT_DIR / file), size)
+    try:
+        f.set_variation_by_axes(axes)
+    except Exception:
+        pass
+    return f
+
+
+def tracked(draw, xy, text, font, fill, tracking=0):
+    x, y = xy
+    if not tracking:
+        draw.text((x, y), text, font=font, fill=fill)
+        return draw.textlength(text, font=font)
+    start = x
+    for ch in text:
+        draw.text((x, y), ch, font=font, fill=fill)
+        x += draw.textlength(ch, font=font) + tracking
+    return x - start - tracking
+
+
+def styled(draw, xy, text, role, style, fill, measure=False):
+    file, size, axes, track, upper = TYPE_STYLES[style][role]
+    f = vfont(file, size, axes)
+    t = text.upper() if upper else text
+    if measure:
+        return sum(draw.textlength(c, font=f) + track for c in t) - track if track else draw.textlength(t, font=f)
+    return tracked(draw, xy, t, f, fill, track)
+
+
+def extend_background(img, ox, oy):
+    """Fill the full canvas with the photo's own backdrop gradient so the photo has no visible frame."""
+    a = np.asarray(img).astype(float)
+    left = np.median(a[:, :14], axis=1)
+    right = np.median(a[:, -14:], axis=1)
+    rows = np.clip(np.arange(H) - oy, 0, a.shape[0] - 1)
+    L, R = left[rows], right[rows]
+    t = (np.arange(W) / (W - 1))[None, :, None]
+    fill = L[:, None, :] * (1 - t) + R[:, None, :] * t
+    return Image.fromarray(fill.astype(np.uint8))
+
+
+def compose_pair(spec_path, style=None, output=None):
     """One scene with a male and a female mannequin, plus a full-width palette band."""
     spec = json.loads(pathlib.Path(spec_path).read_text())
+    style = style or spec.get("type", "editorial")
     src = Image.open(ROOT / spec["image"]).convert("RGB")
     arr = np.array(src)
     bg = background_color(arr)
@@ -141,7 +210,7 @@ def compose_pair(spec_path):
         colors.append((it["name"], tuple(int(v) for v in np.median(arr[b:d, a:c].reshape(-1, 3), axis=0))))
 
     band_h = 190
-    fig_top, fig_bottom = 185, H - band_h - 36
+    fig_top, fig_bottom = 190, H - band_h - 36
     scale = min((fig_bottom - fig_top) / (y1 - y0), W / src.width * 1.15)
     img = src.resize((int(src.width * scale), int(src.height * scale)), Image.LANCZOS)
     ox = int(W / 2 - (x0 + x1) / 2 * scale)
@@ -150,11 +219,10 @@ def compose_pair(spec_path):
     canvas.paste(img, (ox, oy), feather(img.size, 46))
     draw = ImageDraw.Draw(canvas)
 
-    draw.text((64, 58), spec["number"], font=font(FONT_SANS, 26, 1), fill=INK)
-    draw.text((62, 94), spec["title"], font=font(FONT_SERIF, 56), fill=INK)
-    handle = "@tonepair.studio"
-    f = font(FONT_SANS, 24)
-    draw.text((W - 64 - draw.textlength(handle, font=f), 66), handle, font=f, fill=(90, 90, 92))
+    styled(draw, (64, 60), spec["number"], "number", style, INK)
+    styled(draw, (62, 92), spec["title"], "title", style, INK)
+    hw = styled(draw, None, "@tonepair.studio", "handle", style, None, measure=True)
+    styled(draw, (W - 64 - hw, 62), "@tonepair.studio", "handle", style, (80, 80, 82))
 
     n = len(colors)
     bw = W / n
@@ -163,13 +231,13 @@ def compose_pair(spec_path):
         bx0, bx1 = int(i * bw), int((i + 1) * bw)
         draw.rectangle([bx0, top, bx1, H], fill=rgb)
         tc = text_color(rgb)
-        draw.text((bx0 + 36, top + 84), name, font=font(FONT_SANS, 36, 5), fill=tc)
-        draw.text((bx0 + 36, top + 130), "#%02X%02X%02X" % rgb, font=font(FONT_SANS, 26), fill=tc)
+        styled(draw, (bx0 + 36, top + 82), name, "label", style, tc)
+        styled(draw, (bx0 + 36, top + 132), "#%02X%02X%02X" % rgb, "hex", style, tc)
 
-    out = ROOT / spec["output"]
+    out = ROOT / (output or spec["output"])
     out.parent.mkdir(parents=True, exist_ok=True)
     canvas.save(out, "JPEG", quality=94)
-    print(out.relative_to(ROOT), "scale %.3f" % scale, [(nm, "#%02X%02X%02X" % c) for nm, c in colors])
+    print(out.relative_to(ROOT), style, [(nm, "#%02X%02X%02X" % c) for nm, c in colors])
 
 
 if __name__ == "__main__":
